@@ -1,5 +1,6 @@
 package com.single.project.scraper.persist.entity;
 
+import com.single.project.scraper.model.Company;
 import lombok.Getter;
 
 import javax.persistence.*;
@@ -15,4 +16,9 @@ public class CompanyEntity {
     @Column(unique = true)
     private String ticker;
     private String name;
+
+    public CompanyEntity(Company company) {
+        this.ticker = company.getTicker();
+        this.name = company.getName();
+    }
 }
