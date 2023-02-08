@@ -1,7 +1,6 @@
 package com.single.project.scraper.service;
 
 import com.single.project.scraper.model.Company;
-import com.single.project.scraper.model.Dividend;
 import com.single.project.scraper.model.ScrapedResult;
 import com.single.project.scraper.persist.CompanyRepository;
 import com.single.project.scraper.persist.DividendRepository;
@@ -9,7 +8,9 @@ import com.single.project.scraper.persist.entity.CompanyEntity;
 import com.single.project.scraper.persist.entity.DividendEntity;
 import com.single.project.scraper.scraper.Scraper;
 import lombok.AllArgsConstructor;
+import org.apache.commons.collections4.Trie;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @Service
 public class CompanyService {
 
+    private final Trie trie;
     private final Scraper yahooFinanceScraper;
 
     private final CompanyRepository companyRepository;
@@ -56,6 +58,28 @@ public class CompanyService {
                                                 .collect(Collectors.toList());
         this.dividendRepository.saveAll(dividendEntities);
         return company;
+    }
+
+    public List<String> getCompanyNamesByKeyword(String keyword) {
+        Pageable limit = PageRequest.of(0, 10);
+        Page<CompanyEntity> companyEntityList = companyRepository.findByNameStartingWithIgnoreCase(keyword, limit);
+
+        return companyEntityList.stream()
+                .map(e -> e.getName())
+                .collect(Collectors.toList());
+    }
+
+    public void addAutoCompleteKeyword(String keyword) {
+        this.trie.put(keyword, null);
+    }
+
+    public List<String> autoComplete(String keyword) {
+        return (List<String>) this.trie.prefixMap(keyword).keySet()
+                .stream().collect(Collectors.toList());
+    }
+
+    public void deleteAutoCompleteKeyword(String keyword) {
+        this.trie.remove(keyword);
     }
 
 }
