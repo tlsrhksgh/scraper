@@ -2,6 +2,7 @@ package com.single.project.scraper.scheduler;
 
 import com.single.project.scraper.model.Company;
 import com.single.project.scraper.model.ScrapedResult;
+import com.single.project.scraper.model.constants.CacheKey;
 import com.single.project.scraper.persist.CompanyRepository;
 import com.single.project.scraper.persist.DividendRepository;
 import com.single.project.scraper.persist.entity.CompanyEntity;
@@ -9,12 +10,16 @@ import com.single.project.scraper.persist.entity.DividendEntity;
 import com.single.project.scraper.scraper.Scraper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
+@EnableCaching
 @Component
 public class ScraperScheduler {
 
@@ -23,7 +28,8 @@ public class ScraperScheduler {
 
     private final Scraper yahooFinanceScraper;
 
-//    @Scheduled(cron = "${scheduler.scrap.yahoo}")
+    @CacheEvict(value = CacheKey.KEY_FINANCE, allEntries = true)
+    @Scheduled(cron = "${scheduler.scrap.yahoo}")
     public void yahooFinanceScheduling() {
         log.info("scraping scheduler is started");
         // 저장된 회사 목록을 조회
