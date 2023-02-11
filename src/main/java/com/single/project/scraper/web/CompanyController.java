@@ -1,9 +1,11 @@
 package com.single.project.scraper.web;
 
 import com.single.project.scraper.model.Company;
+import com.single.project.scraper.model.constants.CacheKey;
 import com.single.project.scraper.persist.entity.CompanyEntity;
 import com.single.project.scraper.service.CompanyService;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,8 @@ public class CompanyController {
 
     private final CompanyService companyService;
 
+    private final CacheManager redisCacheManager;
+
     @GetMapping("/autocomplete")
     public ResponseEntity<?> autoComplete(@RequestParam String keyword) {
         List<String> result = companyService.getCompanyNamesByKeyword(keyword);
@@ -27,7 +31,7 @@ public class CompanyController {
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasRole('READ')")
+    @PreAuthorize("isAuthenticated() and hasRole('READ')")
     @GetMapping
     public ResponseEntity<?> searchCompany(final Pageable pageable) {
         Page<CompanyEntity> companyEntityList = companyService.getAllCompany(pageable);
@@ -39,7 +43,7 @@ public class CompanyController {
      * @param request
      * @return
      */
-    @PreAuthorize("hasRole('WRITE')")
+    @PreAuthorize("isAuthenticated() and hasRole('WRITE')")
     @PostMapping
     public ResponseEntity<?> addCompany(@RequestBody Company request) {
         String ticker = request.getTicker().trim();
@@ -53,8 +57,17 @@ public class CompanyController {
         return ResponseEntity.ok(company);
     }
 
-    @DeleteMapping
-    public ResponseEntity<?> deleteCompany() {
-        return null;
+    @PreAuthorize("hasRole('WRITE')")
+    @DeleteMapping("/{ticker}")
+    public ResponseEntity<?> deleteCompany(@PathVariable String ticker) {
+        String companyName = companyService.deleteCompany(ticker);
+        this.clearFinanceCache(companyName);
+
+        return ResponseEntity.ok(companyName);
     }
+
+    public void clearFinanceCache(String companyName) {
+        this.redisCacheManager.getCache(CacheKey.KEY_FINANCE).evict(companyName);
+    }
+
 }

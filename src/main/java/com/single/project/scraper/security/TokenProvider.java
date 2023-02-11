@@ -58,7 +58,7 @@ public class TokenProvider {
 
         Claims claims = this.parseClaims(token);
 
-        return claims.getExpiration().before(new Date());
+        return !claims.getExpiration().before(new Date());
     }
 
     private Claims parseClaims(String token) {

@@ -13,9 +13,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Slf4j
 @Configuration
-@EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
+@EnableWebSecurity
 public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter authenticationFilter;
@@ -23,7 +23,7 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http.csrf().disable()
+        return http.csrf().disable()
                 .httpBasic().disable()
                 .headers().frameOptions().sameOrigin()
                 .and()
@@ -33,9 +33,8 @@ public class SecurityConfiguration {
                 .antMatchers("/h2-console/**", "/**/signup", "/**/signin")
                 .permitAll()
                 .and()
-                .addFilterBefore(this.authenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-
-        return http.build();
+                .addFilterBefore(this.authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
+
 }

@@ -34,6 +34,7 @@ public class MemberEntity implements UserDetails {
     private List<String> roles;
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return this.roles.stream()
                 .map(SimpleGrantedAuthority::new)
